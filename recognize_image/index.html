@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <style type="text/css">
+        .fileup-btn {
+            -webkit-appearance: none;
+            display: inline-block;
+            padding: 0.5em 1em;
+            text-decoration: none;
+            background: #668ad8;/*ボタン色*/
+            color: #FFF;
+            border-bottom: solid 4px #627295;
+            border-radius: 3px;
+            }
+
+            .fileup-btn:active {
+            -webkit-appearance: none;
+            /*ボタンを押したとき*/
+            -webkit-transform: translateY(4px);
+            transform: translateY(4px);/*下に動く*/
+            border-bottom: none;/*線を消す*/
+            }
+
+            img{
+            width:600px;
+        }
+    </style>
+    <title>サンプル</title>
+</head>
+
+<input type="file" accept="image/*" capture="camera" id="camera" class="input-file" style="display:none">
+
+<label for="camera" class="fileup-btn">
+ファイルを選択
+</label>
+
+<br>
+
+<p id="image_class"></p>
+
+<img id="frame" width="300" height="480">
+<canvas id="canvas"></canvas>
+
+<script>
+    var camera = document.getElementById('camera');
+    var frame = document.getElementById('frame');
+
+    camera.addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        // Do something with the image file.
+        frame.src = URL.createObjectURL(file);
+
+        var img2 = new Image();
+        img2.src = URL.createObjectURL(file);
+
+        img2.onload = function () {
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            canvas.width = 224;
+            canvas.height = 224;
+            ctx.drawImage(img2, 0, 0, 224, 224);
+
+            str = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+            var url = "your server IP address"; // リクエスト先URL
+            var data = "word="+str+"&width="+canvas.width+"&height="+canvas.height; // 送信データ ('param=value&...')
+            var request = new XMLHttpRequest();
+            request.open('POST', url);
+            request.onreadystatechange = function () {
+                if (request.readyState != 4) {
+                    // リクエスト中
+                } else if (request.status != 200) {
+                    // 失敗
+                    var elm = document.getElementById('image_class');
+                    elm.textContent = 'faild...';
+                } else {
+                    // 送信成功
+                    var result = request.responseText;
+                    var elm = document.getElementById('image_class');
+                    elm.textContent = result;
+                }
+            };
+            request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            request.send(data);
+        };
+    });
+
+</script>
